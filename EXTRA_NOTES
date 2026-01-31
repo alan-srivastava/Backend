@@ -1,0 +1,44 @@
+MOST COMMON HEADERS
+Headers control communication, authentication, caching, CORS, and security between client & server.
+
+1. Accept
+👉 Tells server what response format client wants
+Meaning → “Send me JSON”
+
+2. User-Agent
+👉 Info about client/browser/app
+Used for:
+logging
+analytics
+blocking bots
+
+3. Authorization
+👉 Sends auth credentials/token
+Used for:
+login verification
+protected routes
+
+4. Content-Type
+👉 Tells server what type of data is being sent
+Content-Type: application/json
+Other types:
+multipart/form-data (file upload)
+text/plain
+
+5. Cookie
+👉 Stores session/user data
+
+6. Cache-Control
+👉 Controls caching behavior
+Cache-Control: no-cache
+Used for:
+prevent old data
+improve performance
+
+HTTP STATUS CODE
+1**- Used to pass info to user
+2**- sucess
+3**-  Data has been removed or shifted
+4**- client error cames from cilet mistakes
+5**- server error
+

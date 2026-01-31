@@ -1,5 +1,5 @@
 const asyncHandler = (requestHandler) => (req, res, next) => {
-    Promise.resolve(requestHandler(req, res, next)).catch((err)=> next(err));
+    return Promise.resolve(requestHandler(req, res, next)).catch((err)=> next(err));
 }
 
 //this function takes a requestHandler function as input and returns a new function that wraps the original requestHandler in a Promise. If the Promise is rejected (i.e., if an error occurs during the execution of the requestHandler), the error is caught and passed to the next middleware function using next(err). This allows for centralized error handling in Express applications.
