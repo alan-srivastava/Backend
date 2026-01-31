@@ -42,3 +42,6 @@ HTTP STATUS CODE
 4**- client error cames from cilet mistakes
 5**- server error
 
+
+In app.js we defined a route for user registration using userRouter which is imported from user.routes.js. In user.routes.js, we defined a POST route "/register" that calls the registerUser function from user.controller.js when a request is made to that route. The registerUser function is wrapped with asyncHandler to handle
+any asynchronous errors properly.
