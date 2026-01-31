@@ -13,6 +13,7 @@ app.use(express.json({limit:'16kb'})); //to parse JSON data
 app.use(express.urlencoded({extended:true, limit: "16kb"})); //to parse URL-encoded data
 app.use(express.static("public")); //serve static files from the "public" directory
 app.use(cookieParser()); //to parse cookies
+app.set('json spaces', 2); //pretty-print JSON responses
 
 
 //routes import

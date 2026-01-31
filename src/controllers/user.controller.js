@@ -17,7 +17,7 @@ const registerUser=asyncHandler(async(req,res)=>{
      
 
      const {fullName, email, username, password}=req.body
-     console.log("email: ", email);
+     //console.log("email: ", email);
   
      //validation
      if(
@@ -33,24 +33,30 @@ const registerUser=asyncHandler(async(req,res)=>{
      if(existedUser){
         throw new ApiError(409,"User with given username or email already exists"); //ApiError file which we have created in utils folder it's useful here to send custom error message and status code
      }
+     console.log(req.files); //print the files uploaded
 
-   const avtarLocalPath = req.files?.avtar[0]?.path; //this line means if req.files exists and has avtar array with at least one element then get the path of the first element otherwise undefined
-   const coverImageLocalPath = req.files?.coverImage[0]?.path;  //this line means if req.files exists and has coverImage array with at least one element then get the path of the first element otherwise undefined
+   const avatarLocalPath = req.files?.avatar[0]?.path; //this line means if req.files exists and has avatar array with at least one element then get the path of the first element otherwise undefined
+   //const coverImageLocalPath = req.files?.coverImage[0]?.path;  //this line means if req.files exists and has coverImage array with at least one element then get the path of the first element otherwise undefined
     
-   if(!avtarLocalPath){
-        throw new ApiError(400,"Avtar is required");
+
+   let coverImageLocalPath;
+   if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0){ //this line means if req.files exists and has coverImage array with at least one element then get the path of the first element
+        coverImageLocalPath = req.files.coverImage[0].path;
+   }
+   if(!avatarLocalPath){
+        throw new ApiError(400,"Avatar is required");
     }
     
-    const avtar = await uploadOnCloudinary(avtarLocalPath)
+    const avatar = await uploadOnCloudinary(avatarLocalPath)
     const coverImage = await uploadOnCloudinary(coverImageLocalPath)
 
-    if(!avtar){
-        throw new ApiError(400,"Avtar file is required");
+    if(!avatar){
+        throw new ApiError(400,"Avatar file is required");
     }
       
     const user = await User.create({
         fullName,
-        avtar: avtar.url,
+        avatar: avatar.url,
         coverImage: coverImage?.url || "",
         email,
         password,
@@ -68,8 +74,21 @@ const registerUser=asyncHandler(async(req,res)=>{
 });
 export {registerUser};  // Exporting the registerUser function for use in other parts of the application
 
-//In app.js we defined a route for user registration using userRouter which is imported from
-// user.routes.js. In user.routes.js, we defined a POST route "/register" that 
-// calls the registerUser function from user.controller.js when a request is made 
-// to that route. The registerUser function is wrapped with asyncHandler to handle
-// any asynchronous errors properly.
+
+
+//Okay so basically in this file let me explain you step by step what is happening:
+//1. We are importing necessary modules and functions like asyncHandler, ApiError, User model, uploadOnCloudinary function and ApiResponse class.
+//2. We define an asynchronous function registerUser which is wrapped with asyncHandler to handle errors properly.
+//3. Inside the function, we extract user details from the request body.
+//4. We perform validation to check if any required field is empty.
+//5. We check if a user with the given username or email already exists in the database.
+//6. We log the uploaded files to the console for debugging purposes.
+//7. We get the local file paths of the uploaded avatar and cover image.
+//8. We check if the avatar is provided, if not we throw an error.
+//9. We upload the avatar and cover image to Cloudinary using the uploadOnCloudinary function.
+//10. We create a new user in the database with the provided details and the URLs of the uploaded images.
+//11. We retrieve the created user from the database excluding the password and refreshToken fields.
+//12. We check if the user was created successfully, if not we throw an error.
+//13. Finally, we send a success response with the created user details using the ApiResponse class.
+//14. We export the registerUser function for use in other parts of the application.
+// This function is typically called when a user tries to register on the platform.

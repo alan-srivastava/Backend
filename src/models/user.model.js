@@ -50,12 +50,11 @@ const userSchema= new Schema(
     timestamps: true,
     }
 )
-userSchema.pre("save", async function (next) {  // Hash password before saving for example during registration
+userSchema.pre("save", async function () {  // Hash password before saving for example during registration
     if (!this.isModified("password"))   //when user has to udate their avatar of some other field then the password will also updated so to prevent that we use this condition 
-        return next();
+        return;
     
     this.password= await bcrypt.hash(this.password, 10);
-    next();
 })
 userSchema.methods.isPasswordCorrect= async function 
 (password) {

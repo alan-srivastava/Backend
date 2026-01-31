@@ -13,8 +13,9 @@ const uploadOnCloudinary = async (localFilePath) => { // path of the file on loc
         const response = await cloudinary.uploader.upload(localFilePath, {
             resource_type: "auto", // auto-detect the file type (image, video, etc.)
         })   
-        console.log("File uploaded successfully:", response.url);
-        return response;
+    //   console.log("File uploaded successfully:", response.url);
+    fs.unlinkSync(localFilePath); // delete the local file after successful upload to free up space  
+    return response;
     } catch (error) {
         fs.unlinkSync(localFilePath); // delete the local file in case of error to free up space
         return null;
