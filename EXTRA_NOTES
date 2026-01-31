@@ -45,3 +45,39 @@ HTTP STATUS CODE
 
 In app.js we defined a route for user registration using userRouter which is imported from user.routes.js. In user.routes.js, we defined a POST route "/register" that calls the registerUser function from user.controller.js when a request is made to that route. The registerUser function is wrapped with asyncHandler to handle
 any asynchronous errors properly.
+
+
+export {registerUser}; means we can allows multiple functions inside braces to use it into another file like import { registerUser, loginUser } from "./auth";
+export default registerUser; means we can use only one function or variable at a time and import it into another file like import registerUser from import registerUser from "./auth";
+
+
+Cloudinary Integration in Your Code:
+
+Cloudinary is a cloud-based image/media storage service. Here's how it works in your app:
+
+File Upload Flow:
+
+User uploads files (avatar, coverImage) via multer
+Files are temporarily stored locally on your server
+Cloudinary SDK uploads them to the cloud
+Key Files Involved:
+
+cloudinary.js - Contains the upload logic
+Uses cloudinary.uploader.upload() to send files to Cloudinary's servers
+What Happens:
+
+Files get stored on Cloudinary's CDN (Content Delivery Network)
+You receive a public URL back (like http://res.cloudinary.com/dtktnla8e/image/upload/...)
+This URL is saved in MongoDB instead of the actual file
+Local temporary files are deleted after upload
+Benefits:
+
+No server storage needed - saves disk space
+Fast delivery - CDN serves images globally
+Easy image manipulation - Cloudinary can resize, crop, optimize
+Scalable - handles unlimited uploads
+In Your User Model:
+
+avatar and coverImage fields store Cloudinary URLs
+When user fetches their profile, they get the public image links
+Images are always available via Cloudinary's servers
