@@ -2,7 +2,24 @@ import {asyncHandler} from '../utils/asyncHandler.js';
 import {ApiError} from '../utils/ApiError.js';
 import {User} from '../models/user.model.js';
 import { uploadOnCloudinary } from '../utils/cloudinary.js';
-import { ApiResponse } from '../utils/ApiResponse.js';      
+import { ApiResponse } from '../utils/ApiResponse.js';   
+import jwt from 'jsonwebtoken';   
+
+const generateAccessAndRefreshTokens= async(userId)=>{ //This whole function line by line means we are generating access and refresh tokens for the user
+    try {
+        const user = await User.findById(userId);
+        const accessToken=user.generateAccessToken();
+        const refreshToken=user.generateRefreshToken();
+
+        user.refreshToken= refreshToken;
+        await user.save({validateBeforeSave: false}); // we are not validating before saving because we are only updating the refresh token field
+        return {accessToken, refreshToken};
+
+    } catch (error) {
+        throw new ApiError(500,"Error generating tokens");
+        
+    }
+};
 
 const registerUser=asyncHandler(async(req,res)=>{
      //get user details from frontend
@@ -72,7 +89,138 @@ const registerUser=asyncHandler(async(req,res)=>{
         new ApiResponse(201, createdUser, "User registered Successfully")
     );
 });
-export {registerUser};  // Exporting the registerUser function for use in other parts of the application
+
+
+const loginUser= asyncHandler(async (req, res) => {
+    //req body -> data from frontend
+    //username or email
+    //find the user
+    //compare password
+    //access and refresh token
+    //send cookies and response
+    const {username, email, password}= req.body;
+    console.log(email);
+        if(!username && !email){
+            throw new ApiError(400, "username or email is required");
+        }
+
+        const user=await User.findOne({  //here we are finding the user by username or email
+            $or: [{username}, {email}],
+        })
+        if(!user){
+            throw new ApiError (404, "User not found");
+        }
+        const isPasswordValid= await user.isPasswordCorrect(password); //this line will return true or false
+        if(!isPasswordValid){
+            throw new ApiError(401, "Invalid credentials");
+        }
+
+        const {accessToken, refreshToken}= await generateAccessAndRefreshTokens(user._id); //this line will generate access and refresh tokens for the user
+        const loggedInUser= await User.findById(user._id).select( //this line means we are finding the user by id and selecting all fields except password and refreshToken
+            "-password -refreshToken"
+        );
+
+        const options= {
+            httpOnly: true,
+            secure:true
+        };
+        return res.status(200) // This whole block means we are setting the cookies and sending the response
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(
+            new ApiResponse(200,
+                {
+                    user: loggedInUser, accessToken,
+                    refreshToken
+                },
+                "User logged in successfully"
+            )
+        );
+});
+
+const logoutUser= asyncHandler(async(req,res)=>{
+    //get user id from req.user
+    //find the user from db
+    //remove refresh token from db
+    //clear cookies
+    //send response
+  await User.findByIdAndUpdate(
+    req.user._id,
+    {
+        $set: {
+            refreshToken: undefined
+        }
+    },
+    {
+        new: true
+    }
+  )
+  const options= {    // This whole block means we are clearing the cookies and sending the response
+            httpOnly: true,  //this line means the cookie cannot be accessed by client-side scripts so it's more secure
+            secure:true  //this line means the cookie will only be sent over HTTPS connection
+        }
+    return res.status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(new ApiResponse(200, {}, "User logged out successfully"));
+});
+
+const refreshAccessToken=asyncHandler(async(req,res)=>{
+    //get refresh token from cookies
+    //validate refresh token
+    //generate new access token
+    //send response
+    const refreshAccessToken = asyncHandler(async (req, res) => {
+    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken  // This line means we are getting the refresh token from cookies or from request body
+
+    if (!incomingRefreshToken) { 
+        throw new ApiError(401, "unauthorized request")
+    }
+
+    try {
+        const decodedToken = jwt.verify(  // This line means we are verifying the refresh token using the secret key
+            incomingRefreshToken,
+            process.env.REFRESH_TOKEN_SECRET
+        )
+    
+        const user = await User.findById(decodedToken?._id)  // This line means we are finding the user by id from the decoded token
+    
+        if (!user) {
+            throw new ApiError(401, "Invalid refresh token")
+        }
+    
+        if (incomingRefreshToken !== user?.refreshToken) {
+            throw new ApiError(401, "Refresh token is expired or used")
+            
+        }
+    
+        const options = {
+            httpOnly: true,
+            secure: true
+        }
+    
+        const {accessToken, newRefreshToken} = await generateAccessAndRefereshTokens(user._id)  // This line means we are generating new access and refresh tokens for the user
+    
+        return res
+        .status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", newRefreshToken, options)
+        .json(
+            new ApiResponse(
+                200, 
+                {accessToken, refreshToken: newRefreshToken},
+                "Access token refreshed"
+            )
+        )
+    } catch (error) {
+        throw new ApiError(401, error?.message || "Invalid refresh token")
+    }
+
+})
+});
+
+export {registerUser, loginUser, logoutUser, refreshAccessToken}; // Exporting the registerUser, loginUser, and logoutUser functions for use in other parts of the application
+
 
 
 

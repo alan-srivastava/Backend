@@ -81,3 +81,45 @@ In Your User Model:
 avatar and coverImage fields store Cloudinary URLs
 When user fetches their profile, they get the public image links
 Images are always available via Cloudinary's servers
+
+
+Diff between access token and refresh access token is that access token has short expiry time like 15 minutes to 1 hour and refresh token has long expiry time like 7 days to 30 days for example when user login to the application the server will generate both access token and refresh token and send it to the client the client will store the access token in memory and refresh token in http only cookie so when the access token expires the client can use the refresh token to get a new access token without asking user to login again this way user will have seamless experience while using the application.
+
+MIDDLEWARE-- Middleware is a function that runs between the request and response to handle common tasks like authentication, logging, and validation, helping make code reusable and clean.
+
+without middleware (Same auth code repeated)
+app.get("/profile", (req, res) => {
+  if (!req.headers.token) return res.send("Login first")
+  res.send("Profile data")
+})
+
+app.get("/orders", (req, res) => {
+  if (!req.headers.token) return res.send("Login first")
+  res.send("Orders data")
+})
+
+With middleware
+Step 1 — create middleware
+const auth = (req, res, next) => {
+  if (!req.headers.token)
+    return res.send("Login first")
+
+  next() // go to next step    Request → auth middleware → next() → route → Response
+
+}
+
+
+Step 2 — use it
+app.get("/profile", auth, (req, res) => {
+  res.send("Profile data")
+})
+
+app.get("/orders", auth, (req, res) => {
+  res.send("Orders data")
+})
+
+
+Now:
+auth runs first
+then route runs
+
