@@ -118,8 +118,49 @@ app.get("/orders", auth, (req, res) => {
   res.send("Orders data")
 })
 
-
 Now:
 auth runs first
 then route runs
+
+Difference between Access Token and refresh token:
+Access tokens are short-lived tokens used to authenticate API requests, while refresh tokens are long-lived tokens used only to generate new access tokens when they expire. This improves security by limiting exposure while keeping the user logged in seamlessly.
+Login
+   ↓
+Server gives:
+   accessToken (15m)
+   refreshToken (7d)
+
+API calls → use accessToken
+
+If expired →
+   send refreshToken → get new accessToken
+
+
+JWT--
+JWT (JSON Web Token) is a stateless authentication mechanism that allows secure communication between client and server without storing session data on the server.
+It contains 3 parts in its body:
+Header: Which algorithm you are using.
+Payload(DATA): What info do you have
+Signature: checks the manipulation in payload info(It keeps the secret key for encryption(hide))
+
+Register → create account only
+
+Login →
+   create access + refresh
+   store refresh in DB
+   send tokens
+
+Use app →
+   access token for APIs
+
+Access expired →                             Use refresh token silently
+refresh → new access                         → get new access token
+                                             → continue automaticallyrefresh → new access
+
+Login again later →
+   create NEW tokens
+   replace refresh in DB
+   old token invalid
+
+
 
